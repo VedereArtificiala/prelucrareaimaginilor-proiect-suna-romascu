@@ -3,7 +3,7 @@ import mediapipe as mp
 
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(static_image_mode=False, model_complexity=1,
-                      min_detection_confidence=0.85, min_tracking_confidence=0.75,
+                      min_detection_confidence=0.79, min_tracking_confidence=0.75,
                       max_num_hands=2)
 
 cap = cv2.VideoCapture(0)
@@ -21,8 +21,9 @@ while True:
                         cv2.FONT_HERSHEY_COMPLEX, 1,
                         (0, 0, 0), 2)
 
-            for h, hand_landmarks in zip(results.multi_handedness, results.multi_hand_landmarks):
-                label = h.classification[0].label
+            for i in range(len(results.multi_handedness)):
+                h = results.multi_handedness[i]
+                hand_landmarks = results.multi_hand_landmarks[i]
 
                 palm_landmark = hand_landmarks.landmark[9]
 
