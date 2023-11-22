@@ -2,7 +2,9 @@ import cv2
 import mediapipe as mp
 
 mpHands = mp.solutions.hands
-hands = mpHands.Hands(static_image_mode=False, model_complexity=1, min_detection_confidence=0.75, min_tracking_confidence=0.75, max_num_hands=2)
+hands = mpHands.Hands(static_image_mode=False, model_complexity=1,
+                      min_detection_confidence=0.85, min_tracking_confidence=0.75,
+                      max_num_hands=2)
 
 cap = cv2.VideoCapture(0)
 
@@ -18,9 +20,35 @@ while True:
             cv2.putText(img, 'Both Hands', (250, 50),
                         cv2.FONT_HERSHEY_COMPLEX, 1,
                         (0, 0, 0), 2)
+
+            for h, hand_landmarks in zip(results.multi_handedness, results.multi_hand_landmarks):
+                label = h.classification[0].label
+
+                palm_landmark = hand_landmarks.landmark[9]
+
+                palm_x = int(palm_landmark.x * img.shape[1])
+                palm_y = int(palm_landmark.y * img.shape[0])
+
+                square_size = 50
+                cv2.rectangle(img, (palm_x - square_size, palm_y - square_size),
+                              (palm_x + square_size, palm_y + square_size),
+                              (0, 255, 0), 2)
+
         else:
-            for handedness in results.multi_handedness:
-                label = handedness.classification[0].label
+            for h in results.multi_handedness:
+                label = h.classification[0].label
+
+                hand_landmarks = results.multi_hand_landmarks[0]
+
+                palm_landmark = hand_landmarks.landmark[9]
+
+                palm_x = int(palm_landmark.x * img.shape[1])
+                palm_y = int(palm_landmark.y * img.shape[0])
+
+                square_size = 50
+                cv2.rectangle(img, (palm_x - square_size, palm_y - square_size),
+                              (palm_x + square_size, palm_y + square_size),
+                              (0, 255, 0), 2)
 
                 if label == 'Left':
                     cv2.putText(img, label + ' Hand', (250, 50),
