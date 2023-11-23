@@ -1,5 +1,6 @@
 import cv2
 import mediapipe as mp
+import math
 
 mpHands = mp.solutions.hands
 hands = mpHands.Hands(static_image_mode=False, model_complexity=1,
@@ -16,50 +17,29 @@ while True:
 
     if results.multi_hand_landmarks:
 
-        if len(results.multi_handedness) == 2:
-            cv2.putText(img, 'Both Hands', (250, 50),
-                        cv2.FONT_HERSHEY_COMPLEX, 1,
-                        (0, 0, 0), 2)
+        for i in range(len(results.multi_handedness)):
+            h = results.multi_handedness[i]
+            hand_landmarks = results.multi_hand_landmarks[i]
 
-            for i in range(len(results.multi_handedness)):
-                h = results.multi_handedness[i]
-                hand_landmarks = results.multi_hand_landmarks[i]
+            palm_landmark = hand_landmarks.landmark[9]
+            palm_x = int(palm_landmark.x * img.shape[1])
+            palm_y = int(palm_landmark.y * img.shape[0])
 
-                palm_landmark = hand_landmarks.landmark[9]
+            finger_tip = hand_landmarks.landmark[12]
+            distance = math.sqrt((palm_landmark.x - finger_tip.x)**2 + (palm_landmark.y - finger_tip.y)**2)
 
-                palm_x = int(palm_landmark.x * img.shape[1])
-                palm_y = int(palm_landmark.y * img.shape[0])
+            square_size = int(distance * 470)
+            cv2.rectangle(img, (palm_x - square_size, palm_y - square_size),
+                          (palm_x + square_size, palm_y + square_size),
+                          (0, 255, 0), 2)
 
-                square_size = 50
-                cv2.rectangle(img, (palm_x - square_size, palm_y - square_size),
-                              (palm_x + square_size, palm_y + square_size),
-                              (0, 255, 0), 2)
+            if len(results.multi_handedness) == 2:
+                label = 'Both Hand'
+            else:
+                label = h.classification[0].label + ' Hand'
 
-        else:
-            for h in results.multi_handedness:
-                label = h.classification[0].label
-
-                hand_landmarks = results.multi_hand_landmarks[0]
-
-                palm_landmark = hand_landmarks.landmark[9]
-
-                palm_x = int(palm_landmark.x * img.shape[1])
-                palm_y = int(palm_landmark.y * img.shape[0])
-
-                square_size = 50
-                cv2.rectangle(img, (palm_x - square_size, palm_y - square_size),
-                              (palm_x + square_size, palm_y + square_size),
-                              (0, 255, 0), 2)
-
-                if label == 'Left':
-                    cv2.putText(img, label + ' Hand', (250, 50),
-                                cv2.FONT_HERSHEY_COMPLEX, 1,
-                                (0, 0, 0), 2)
-
-                if label == 'Right':
-                    cv2.putText(img, label + ' Hand', (250, 50),
-                                cv2.FONT_HERSHEY_COMPLEX, 1,
-                                (0, 0, 0), 2)
+            cv2.putText(img, label, (250, 50),
+                        cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 0), 2)
 
     cv2.imshow('Image', img)
     key = cv2.waitKey(1) & 0xff
